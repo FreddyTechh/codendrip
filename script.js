@@ -1,69 +1,68 @@
-AOS.init({ duration: 1200, once: true });
+const navLinks = document.getElementById("nav-links");
+const hamburger = document.getElementById("hamburger");
+const themeToggle = document.getElementById("theme-toggle");
 
-// Hamburger menu
-const hamburger = document.getElementById('hamburger');
-const menu = document.getElementById('menu');
-hamburger.addEventListener('click', () => menu.classList.toggle('active'));
+// MOBILE MENU
+hamburger.onclick = () => {
+    navLinks.classList.toggle("active");
+};
 
-// Scroll Navbar
-window.addEventListener('scroll', () => {
-    document.querySelector('.navbar').classList.toggle('scrolled', window.scrollY > 50);
-});
+// THEME SWITCH
+themeToggle.onclick = () => {
+    document.body.classList.toggle("light");
+    themeToggle.textContent =
+        document.body.classList.contains("light") ? "☀️" : "🌙";
 
-// Active nav link
-const sections = document.querySelectorAll('section');
-const navLinks = document.querySelectorAll('.menu a');
-window.addEventListener('scroll', () => {
-    let current = '';
-    sections.forEach(sec => {
-        const top = sec.offsetTop - 80;
-        if (scrollY >= top) current = sec.id;
-    });
-    navLinks.forEach(link => link.classList.remove('active'));
-    navLinks.forEach(link => {
-        if (link.getAttribute('href') === '#' + current) link.classList.add('active');
-    });
-});
+    localStorage.setItem(
+        "theme",
+        document.body.classList.contains("light") ? "light" : "dark"
+    );
+};
 
-// Skills bar animation on scroll
-const bars = document.querySelectorAll('.bar span');
-const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.width = entry.target.style.getPropertyValue('--width');
-        }
-    });
-}, { threshold: 0.5 });
-bars.forEach(bar => observer.observe(bar));
-
-// Light/Dark toggle
-const toggle = document.getElementById('theme-toggle');
-toggle.addEventListener('click', () => {
-    document.body.classList.toggle('light-mode');
-    toggle.textContent = document.body.classList.contains('light-mode') ? '🌙' : '☀️';
-    localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-});
-if (localStorage.getItem('theme') === 'light') {
-    document.body.classList.add('light-mode');
-    toggle.textContent = '🌙';
+// Persist theme
+if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light");
+    themeToggle.textContent = "☀️";
 }
-// Initialize AOS
-AOS.init({ duration: 1200, easing: "ease-in-out", once: true });
+/* ================= EMAILJS FORM ================= */
 
-// EmailJS form
+// Initialize EmailJS
 emailjs.init("pyLEiBlind3E_m4If");
-document.getElementById("contact-form").addEventListener("submit", function (e) {
+
+// Select the form
+const contactForm = document.getElementById("contact-form");
+
+contactForm.addEventListener("submit", function (e) {
     e.preventDefault();
+
     const btn = this.querySelector("button[type='submit']");
     btn.disabled = true;
-    const { user_name: name, user_email: email, message } = this;
-    emailjs.send("service_v6ef3qj", "template_l0ie029", { user_name: name.value, user_email: email.value, message: message.value })
+
+    const name = this.user_name.value;
+    const email = this.user_email.value;
+    const message = this.message.value;
+
+    // Send email to yourself (owner)
+    emailjs.send("service_v6ef3qj", "template_l0ie029", {
+        user_name: name,
+        user_email: email,
+        message: message
+    })
         .then(() => {
-            emailjs.send("service_v6ef3qj", "template_7d7kmqi", { user_name: name.value, user_email: email.value, message: message.value });
-            window.open(`https://wa.me/2348159204641?text=Hello,%20my%20name%20is%20${name.value}%0AEmail:%20${email.value}%0AMessage:%20${message.value}`, "_blank");
+            // Send confirmation email to the user
+            return emailjs.send("service_v6ef3qj", "template_7d7kmqi", {
+                user_name: name,
+                user_email: email,
+                message: message
+            });
+        })
+        .then(() => {
             alert("Message sent successfully!");
-            this.reset();
+            contactForm.reset();
             btn.disabled = false;
         })
-        .catch(error => { alert("Failed to send message: " + error.text); btn.disabled = false; });
+        .catch(error => {
+            alert("Failed to send message: " + error.text);
+            btn.disabled = false;
+        });
 });
